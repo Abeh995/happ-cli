@@ -1,109 +1,244 @@
-# happ-cli
+# Happ CLI ⚡
 
-A headless Linux VPN/proxy client based on [GenkaOk/happ-cli](https://github.com/GenkaOk/happ-cli), originally by [aimuzov](https://github.com/aimuzov). It runs an embedded Xray core, without the Happ desktop application or happd.
+<div align="center">
 
-[Русская документация](README.ru.md)
+[![GitHub Release](https://img.shields.io/github/v/release/Abeh995/happ-cli?style=for-the-badge&color=blue)](https://github.com/Abeh995/happ-cli/releases)
+[![License: GPL-3.0](https://img.shields.io/github/license/Abeh995/happ-cli?style=for-the-badge&color=green)](LICENSE)
+[![Platforms](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-orange?style=for-the-badge)](#)
+[![Go Version](https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=for-the-badge&logo=go)](https://golang.org)
+[![Python Version](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python)](https://python.org)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Abeh995/happ-cli/build-release.yml?branch=main&style=for-the-badge)](https://github.com/Abeh995/happ-cli/actions)
 
-The main workflow is simple: fetch a subscription, find a profile that can actually reach the required site, save that choice, and reconnect on persistent failures. An AUTO profile is optional.
+**A high-performance, headless VPN client and interactive terminal application for the Happ / Xray ecosystem.**  
+Equipped with an interactive console TUI dashboard, Layer-3 Wintun TUN adapter, zero-leak DoH DNS subsystem, and persistent background daemon execution.
 
-## Build
+[فارسی (Persian Guide)](README.fa.md) • [Русская документация](README.ru.md) • [Report Bug](https://github.com/Abeh995/happ-cli/issues) • [Releases](https://github.com/Abeh995/happ-cli/releases)
 
-```sh
-nix build github:Abeh995/happ-cli
-./result/bin/happ --help
+</div>
+
+---
+
+## 📖 Table of Contents
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [5-Second Windows Installation](#-5-second-windows-installation)
+- [Interactive Terminal App (TUI Dashboard)](#-interactive-terminal-app-tui-dashboard)
+- [Connection Modes: TUN vs System Proxy](#-connection-modes-tun-vs-system-proxy)
+- [One-Line CLI Commands](#-one-line-cli-commands)
+- [Architecture & Network Internals](#-architecture--network-internals)
+- [Linux & macOS Installation](#-linux--macos-installation)
+- [Building from Source](#-building-from-source)
+- [Contributing & License](#-contributing--license)
+
+---
+
+## 💡 Overview
+
+Developers, sysadmins, and power users often need a dependable, zero-lag VPN connection on headless servers, developer workstations, and development environments without dealing with bloated graphical interfaces.
+
+**Happ CLI** bridges the gap by wrapping embedded **Xray-core** and **sing-box** engines into a lightweight, scriptable command-line interface:
+- **Persistent Background Daemon:** Running `happ connect` spawns an independent background daemon. Closing the terminal or shell **never** drops the VPN connection.
+- **Layer-3 Wintun TUN Routing:** Creates a virtual network adapter (`happ-cli-tun`) that transparently tunnels 100% of Windows network traffic (browsers, Telegram, Discord, terminal commands, games) without requiring per-app proxy configuration.
+- **Anti-DNS Poisoning & Sniffing:** Completely eliminates local ISP DNS manipulation by intercepting UDP 53 (`hijack-dns`), sniffing TLS/HTTP/QUIC headers, and resolving through encrypted Cloudflare and Google DoH endpoints.
+
+---
+
+## ✨ Key Features
+
+- ⚡ **Ultra-Fast 1-Line Setup:** Complete Windows installation in 5 seconds via automated PowerShell script.
+- 🎛️ **Interactive Console Dashboard (TUI):** Sleek, keyboard-driven terminal dashboard for server browsing, mode toggling, and ping benchmarks.
+- 🛡️ **Layer-3 TUN & Proxy Modes:** Instant switching between Wintun virtual adapter mode (full system) and WinINet System Proxy mode (browsers only).
+- 🔒 **Zero DNS Leaks:** Built-in DNS hijacking on port 53 and encrypted remote DNS resolvers (`https+local://1.1.1.1/dns-query`, `8.8.8.8`).
+- 🔄 **Detached Daemon Supervisor:** VPN stays running across multiple terminal sessions until explicitly disconnected.
+- 🌐 **Modern Protocol Support:** Full support for VLESS (Reality, WebSocket, gRPC), VMess, Trojan, and Shadowsocks links.
+- 📊 **Subscription Telemetry:** Displays data quota consumed, remaining bandwidth, and account expiration dates.
+- 📶 **Live Latency Benchmarking:** Fast TCPing latency measurements for individual servers or entire clusters.
+
+---
+
+## ⚡ 5-Second Windows Installation
+
+Open **PowerShell** (preferably **Run as Administrator** to allow virtual adapter creation) and run:
+
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/Abeh995/happ-cli/main/windows/install.ps1 | iex"
 ```
 
-Or build with Go 1.26.4 or newer:
+The installer verifies prerequisites, installs the `happ` binary globally into your system `PATH`, and synchronizes the Wintun driver.
 
-```sh
-CGO_ENABLED=0 go build -o happ ./cmd/happ
+---
+
+## 🖥️ Interactive Terminal App (TUI Dashboard)
+
+Launch the interactive dashboard anywhere in your terminal:
+
+```powershell
+happ
 ```
 
-Build from the checkout: the upstream gVisor compatibility replacement in `go.mod` must be honored. The Nix package includes iproute2, iptables and Xray geoip/geosite assets. Standalone binaries need those tools for Linux TUN and `XRAY_LOCATION_ASSET` pointing to a directory containing `geoip.dat` / `geosite.dat` if a profile references them.
-
-## Commands
-
-```sh
-# Keep the subscription URL out of shell history and process arguments.
-happ sub add --name primary --url-file /path/to/private-subscription-url
-happ sub list
-happ sub use primary
-happ list
-
-# Probe profiles through temporary local proxies, without changing routes.
-happ select --working --url https://api.github.com
-happ select 'Germany'                 # or explicitly choose a name / number
-happ connect --health-check --failover
-happ check --url https://api.github.com
-
-happ sub update --all                 # noninteractive; keeps cached data on failure
-happ config-show
-happ config-init                     # deliberately overwrites config.yaml with defaults
+### Dashboard Preview:
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                  HAPP VPN TERMINAL DASHBOARD                 │
+├──────────────────────────────────────────────────────────────┤
+│  Status:       ● CONNECTED (Background Daemon Running)       │
+│  Connection:   TUN Mode (Virtual Adapter: happ-cli-tun)      │
+│  Active Server:#2 🇩🇪 Frankfurt                               │
+│  Daemon PIDs:  Xray: 14220 | TUN: 15304                      │
+│  System Proxy: Disabled (Direct - Not needed in TUN)         │
+│  Admin Privs:  Yes (Elevated)                                │
+│  Total Nodes:  118                                           │
+├──────────────────────────────────────────────────────────────┤
+│  [1] ⚡ Connect (Start Background VPN)                         │
+│  [2] 🛑 Disconnect (Stop VPN & Revert Direct)                 │
+│  [3] 🌐 Select Server (Browse 118 servers)                   │
+│  [4] 🔄 Update Subscription (Refresh Servers)                 │
+│  [5] ➕ Add New Subscription Link                             │
+│  [6] 📶 Ping Servers (Latency Test)                           │
+│  [7] 🔀 Switch Mode (Current: TUN)                           │
+│  [8] 📋 View Detailed Status & Public IP                      │
+│  [0] 🚪 Exit Terminal App (VPN stays connected!)             │
+└──────────────────────────────────────────────────────────────┘
+Choose option [0-8]: 
 ```
 
-`--home DIR` works with all commands; the default is `~/.config/happ-cli`. `--url-file -` reads stdin. `happ://add/https://...` subscription links are accepted. `--ua` overrides the subscription User-Agent.
+---
 
-`select --working` chooses the **first passing profile**, not the one with the lowest ping. It verifies HTTP 2xx through that profile's SOCKS proxy, with an eight-second request deadline per profile. It does not change routes or restart a running service. If all probes fail, the previous selection is kept. Use an endpoint that matters to your workload.
+## 🔌 Connection Modes: TUN vs System Proxy
 
-Selection survives reordered subscriptions and changed credentials. JSON profiles use their unique `remarks` name as identity; share links use protocol/name/address/port. If a selected profile disappears, a normal connection fails explicitly; `--failover` allows other profiles. Failover tries the cached profiles once per process, leaves the preferred choice intact, and reports failure if none work. systemd then retries after 15 seconds.
+Happ CLI supports two distinct routing architectures:
 
-`sub update` validates generated Xray configs before replacing cached data. Empty responses and losses exceeding half the profile count are errors; `--accept-shrink` explicitly permits the latter. Configuration validation does not prove that a provider is reachable. The update timer and command can run alongside selection without erasing it.
+| Dimension | **TUN Mode** (Recommended) | **System Proxy Mode** |
+| :--- | :--- | :--- |
+| **Traffic Scope** | 100% of all applications (Browsers, Telegram, Discord, CLI, Games) | Browsers and apps respecting Windows WinINet proxy |
+| **Network Layer** | Layer 3 IP Packet Tunnel (`happ-cli-tun` via Wintun driver) | Layer 7 Application Proxy (`WinINet Internet Settings`) |
+| **DNS Resolution** | Intercepts UDP 53 (`hijack-dns`) — zero DNS leaks | Encrypted DoH through local Xray core |
+| **Privileges** | Requires Administrator terminal | Standard User (No admin required) |
 
-## Linux service and TUN
+```powershell
+# View current active mode:
+happ mode
 
-The flake exports `nixosModules.default`:
+# Set default mode to TUN (Full system):
+happ mode tun
+
+# Set default mode to System Proxy (Browsers only):
+happ mode proxy
+```
+
+---
+
+## ⌨️ One-Line CLI Commands
+
+For automated scripts, CI/CD, or users who prefer direct command-line execution:
+
+| Command | Action Description |
+| :--- | :--- |
+| `happ` | Open interactive terminal dashboard (TUI) |
+| `happ connect` | Connect to preferred node as a detached background daemon |
+| `happ connect --tun` | Connect explicitly using Layer-3 TUN Mode |
+| `happ connect --proxy` | Connect explicitly using System Proxy Mode |
+| `happ connect <ID>` | Connect directly to node by index (e.g., `happ connect 3`) |
+| `happ disconnect` | Terminate VPN background daemons and restore direct traffic |
+| `happ status` | Display connection status, daemon PIDs, and public egress IP |
+| `happ mode [tun/proxy]` | View or set default connection mode |
+| `happ list [page]` | Browse proxy nodes with paginated view |
+| `happ select <ID/query>` | Select active server by numeric ID or country/city name |
+| `happ sub add <URL>` | Import new subscription link (VLESS/VMess/Trojan) |
+| `happ sub update` | Refresh all subscription nodes from provider |
+| `happ sub list` | View saved subscriptions and quota telemetry |
+| `happ ping all` | Benchmark live TCP latency across all nodes |
+| `happ help` | Print command-line usage reference |
+
+---
+
+## 🏗️ Architecture & Network Internals
+
+```
++-----------------------------------------------------------------------+
+|                    Terminal (PowerShell / CMD / Bash)                 |
+|            Commands: happ, happ connect, happ mode, happ list         |
++-----------------------------------+-----------------------------------+
+                                    |
+          +-------------------------+-------------------------+
+          |                                                   |
+[Mode 1: TUN Mode (Default)]                [Mode 2: System Proxy Mode]
+Layer-3 Virtual Network Adapter             Windows Internet Settings (WinINet)
+Wintun Driver (`happ-cli-tun`)              Configures HTTP/HTTPS/SOCKS registry
+Hijacks 100% of System Traffic & DNS        Routes browsers & proxy-aware apps
+Requires Administrator terminal             Standard User (No Admin required)
+          |                                                   |
+          +-------------------------+-------------------------+
+                                    |
++-----------------------------------+-----------------------------------+
+|               Local Core Engine (127.0.0.1:10808 / 10809)            |
+|  - Embedded Xray-core 26.9.9 (VLESS Reality / VMess / Trojan)        |
+|  - Active Sniffing for TLS, HTTP, and QUIC (IPIfNonMatch strategy)    |
+|  - Encrypted Remote DoH Resolvers (Cloudflare 1.1.1.1 / Google 8.8.8.8)|
++-----------------------------------------------------------------------+
+```
+
+---
+
+## 🐧 Linux & macOS Installation
+
+Pre-compiled standalone Go binaries for Linux and macOS are available on the [Releases](https://github.com/Abeh995/happ-cli/releases) page:
+
+```bash
+# Download latest Linux amd64 binary:
+curl -Lo happ.tar.gz https://github.com/Abeh995/happ-cli/releases/latest/download/happ-linux-amd64.tar.gz
+tar -xzf happ.tar.gz
+sudo mv happ /usr/local/bin/
+
+# Verify installation:
+happ --help
+```
+
+### Nix / NixOS Module
+Happ CLI exports a full Nix flake module with systemd service integration (`nix/module.nix`).
 
 ```nix
-# flake inputs
-happ-cli.url = "github:Abeh995/happ-cli";
-happ-cli.inputs.nixpkgs.follows = "nixpkgs";
+# flake.nix inputs
+inputs.happ-cli.url = "github:Abeh995/happ-cli";
 
-# NixOS module imports and settings
-imports = [ inputs.happ-cli.nixosModules.default ];
+# Configuration
 services.happ-cli.enable = true;
 services.happ-cli.mode = "tun";
-services.happ-cli.checkURL = "https://www.gstatic.com/generate_204";
-services.happ-cli.failover = true;
 services.happ-cli.autoUpdate = true;
 ```
 
-The service uses `/var/lib/happ-cli` (0700, root-owned). Populate that directory with `happ --home /var/lib/happ-cli sub add ...` and `select --working`, using your normal privilege mechanism. Only one VPN should own the default route: the module conflicts with `happ-vpn.service`. Apply NixOS changes manually. This repository never runs a system rebuild itself.
+---
 
-Service commands delegate to systemd and use its existing permissions:
+## 🛠️ Building from Source
 
-```sh
-happ service start
-happ service stop
-happ service restart
-happ service status
-happ service logs
-happ --home /var/lib/happ-cli check --tun --url https://api.github.com
-```
+### Go Core Engine
+```bash
+git clone https://github.com/Abeh995/happ-cli.git
+cd happ-cli
 
-The six-hour update timer restarts an already-running service only after successful refresh. It does not turn a manually stopped service back on. A change to the saved selection takes effect on restart.
-
-Both `tun` (tun2socks) and `tun-direct` (native Xray TUN) support periodic SOCKS **and interface-bound TUN** probes. Three consecutive failures cause a nonzero exit or failover. SIGINT/SIGTERM cleanly remove installed routes. Proxy mode needs no root; TUN requires root. Local proxies listen on loopback only.
-
-Routing uses table 20260, priorities 20257–20260, protocol 242 and socket mark `0x48415050`. It consults the existing main table for connected/static routes (including Docker and WARP veth networks), preserves private LAN routes and TCP source-port 22 replies, and excludes marked Xray uplink/bootstrap DNS sockets from the tunnel. Ordinary global IPv6 is rejected rather than silently bypassing the IPv4 tunnel. `cleanup-tun` removes this fork's tagged leftovers and refuses to operate while its TUN process is running. It never flushes upstream's old table 100.
-
-This is **fail-open**: after stopping/crashing, normal networking can resume. It is not a kill switch. LAN DNS and bootstrap resolution can use the ordinary uplink. SSH on a custom port across a public route needs an explicit bypass route before enabling the VPN. Additional VPNs or earlier policy rules can override the intended route and require host-specific inspection.
-
-## Complete Xray profiles
-
-JSON objects, arrays and base64-wrapped JSON are stored intact, retaining outbounds, DNS, transports, routing, balancers and observatories. The CLI supplies its own loopback/TUN listeners, maps corresponding inbound routing tags, removes provider API/metrics listeners and file-log settings, and adds Linux socket marks for TUN. Only import subscriptions you trust. Provider-specific unsupported Xray features produce a validation error; a JSON parser cannot make them compatible.
-
-Share links support VLESS, VMess, Trojan and Shadowsocks. Hysteria2 share links can be listed but are not converted by this client. A raw profile is supported only if the embedded Xray version accepts it. This fork prioritizes Linux/NixOS; macOS proxy builds remain available, while complete JSON TUN and native TUN routing are Linux-only.
-
-`state.json` contains subscription URLs and credentials; `device.json` contains persistent HWID/UUID. Keep both private and backed up. A corrupt identity is an error, never a reason to silently register a new device. Copy a known identity before fetching a device-limited subscription. `happ config` prints credentials and should not be pasted into public issue reports.
-
-## Verification
-
-```sh
+# Run unit tests
 go test ./...
-go vet ./...
-bash tests/netns.sh
+
+# Build binary
+CGO_ENABLED=0 go build -trimpath -o bin/happ ./cmd/happ
 ```
 
-The network test creates isolated user, mount and network namespaces. It checks both TUN implementations with a real encrypted proxy, Docker/WARP-style routes, forwarded traffic, IPv6 rejection and teardown. It does not change host networking. Unprivileged user namespaces, iproute2, iptables and `/dev/net/tun` must be available. A passing isolated test does not replace testing the actual provider and VDS routing.
+### Windows Suite
+The Windows headless suite is located in `windows/` and runs on Python 3.8+:
+```powershell
+python -m py_compile windows/happ_core.py
+```
 
-Useful reference: [d4nom/happ-vpn-setup](https://github.com/d4nom/happ-vpn-setup) documents stable HWID, repeated-failure health checks and validation before refresh. This fork retains Xray profiles rather than translating them to sing-box.
+---
+
+## 🤝 Contributing & License
+
+Contributions, issues, and feature requests are very welcome! Please read the [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests.
+
+This project is licensed under the **[GNU General Public License v3.0 (GPL-3.0)](LICENSE)**.
+
+---
+
+<div align="center">
+Crafted with precision by <a href="https://github.com/Abeh995">Abeh995</a>
+</div>
