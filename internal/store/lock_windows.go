@@ -37,3 +37,4 @@ func (s *Store) mutate(change func() error) error {
 	}
 	return s.save()
 }
+

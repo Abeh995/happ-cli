@@ -114,3 +114,4 @@ func DisableAll() error {
 	refreshSettings()
 	return nil
 }
+
