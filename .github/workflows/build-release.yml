@@ -19,6 +19,12 @@ jobs:
         env:
           CGO_ENABLED: '0'
       - run: go vet ./...
+      - name: Test Windows Build
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+        run: go build -o happ.exe ./cmd/happ
       - name: Isolated TUN and routing integration
         run: |
           # Run the user namespace test as root on runners that restrict unprivileged user namespaces.
@@ -28,8 +34,31 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [linux, darwin]
-        arch: [amd64, arm64]
+        include:
+          - os: linux
+            arch: amd64
+            bin: happ
+            format: tar.gz
+          - os: linux
+            arch: arm64
+            bin: happ
+            format: tar.gz
+          - os: darwin
+            arch: amd64
+            bin: happ
+            format: tar.gz
+          - os: darwin
+            arch: arm64
+            bin: happ
+            format: tar.gz
+          - os: windows
+            arch: amd64
+            bin: happ.exe
+            format: zip
+          - os: windows
+            arch: arm64
+            bin: happ.exe
+            format: zip
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -42,15 +71,21 @@ jobs:
           GOARCH: ${{ matrix.arch }}
         run: |
           mkdir -p dist
-          go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" -o dist/happ ./cmd/happ
+          go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" -o "dist/${{ matrix.bin }}" ./cmd/happ
           cd dist
-          tar czf happ-${GOOS}-${GOARCH}.tar.gz happ
-          sha256sum *.tar.gz > checksums.txt
+          if [ "${{ matrix.format }}" = "zip" ]; then
+            sudo apt-get update && sudo apt-get install -y zip
+            zip "happ-${{ matrix.os }}-${{ matrix.arch }}.zip" "${{ matrix.bin }}"
+          else
+            tar czf "happ-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" "${{ matrix.bin }}"
+          fi
+          sha256sum *.* > checksums.txt
       - uses: actions/upload-artifact@v4
         with:
           name: happ-${{ matrix.os }}-${{ matrix.arch }}
           path: |
             dist/*.tar.gz
+            dist/*.zip
             dist/checksums.txt
   release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -62,10 +97,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - run: cat artifacts/*/checksums.txt > checksums.txt
+      - run: cat artifacts/*/checksums.txt | sort -u > checksums.txt
       - uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref, 'dev') || contains(github.ref, 'beta') }}
           files: |
             artifacts/*/*.tar.gz
+            artifacts/*/*.zip
             checksums.txt
