@@ -29,9 +29,7 @@ func Start(opts Options) (*Tunnel, error) {
 	}
 
 	engine.Insert(key)
-	if err := engine.Start(); err != nil {
-		return nil, fmt.Errorf("start tun2socks engine on windows: %w", err)
-	}
+	engine.Start()
 
 	tun := &Tunnel{
 		teardown: []func(){
