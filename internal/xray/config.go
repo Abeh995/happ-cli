@@ -1,0 +1,211 @@
+// Package xray builds xray-core configuration from a normalized link.Server.
+// It deliberately has no dependency on xray-core itself; it only produces the
+// human-readable JSON config that the run subpackage feeds to the embedded core.
+package xray
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/Abeh995/happ-cli/internal/link"
+)
+
+// Options controls the inbounds and logging of the generated config.
+type Options struct {
+	LogLevel   string // xray loglevel; default "warning"
+	Listen     string // inbound listen address; default 127.0.0.1
+	SocksPort  int    // SOCKS inbound port; 0 disables
+	HTTPPort   int    // HTTP inbound port; 0 disables
+	TUNDirect  bool   // use xray's built-in TUN inbound (no SOCKS/tun2socks)
+	DNSProxy   bool   // add xray DNS resolver to prevent leaks; default true
+	SocketMark int    // Linux: bypass our policy routes for Xray uplink sockets
+}
+
+// Config is the root xray configuration object.
+type Config struct {
+	raw       map[string]json.RawMessage
+	Log       *LogConfig `json:"log,omitempty"`
+	DNS       *DNSConfig `json:"dns,omitempty"`
+	Inbounds  []Inbound  `json:"inbounds"`
+	Outbounds []Outbound `json:"outbounds"`
+}
+
+// JSON marshals the config to the bytes accepted by xray-core's JSON loader.
+func (c *Config) JSON() ([]byte, error) { return json.MarshalIndent(c, "", "  ") }
+
+func (c *Config) MarshalJSON() ([]byte, error) {
+	if c.raw != nil {
+		return json.Marshal(c.raw)
+	}
+	type plain Config
+	return json.Marshal((*plain)(c))
+}
+
+type LogConfig struct {
+	Loglevel string `json:"loglevel,omitempty"`
+}
+
+// DNSConfig configures xray's built-in DNS resolver. All DNS queries are
+// resolved through the proxy outbound to prevent leaks.
+type DNSConfig struct {
+	Servers []string `json:"servers"`
+}
+
+type Inbound struct {
+	Tag      string    `json:"tag,omitempty"`
+	Listen   string    `json:"listen,omitempty"`
+	Port     int       `json:"port"`
+	Protocol string    `json:"protocol"`
+	Settings any       `json:"settings,omitempty"`
+	Sniffing *Sniffing `json:"sniffing,omitempty"`
+}
+
+type Sniffing struct {
+	Enabled      bool     `json:"enabled"`
+	DestOverride []string `json:"destOverride"`
+}
+
+type Outbound struct {
+	Tag            string          `json:"tag,omitempty"`
+	Protocol       string          `json:"protocol"`
+	Settings       any             `json:"settings,omitempty"`
+	StreamSettings *StreamSettings `json:"streamSettings,omitempty"`
+}
+
+type StreamSettings struct {
+	Sockopt         map[string]any   `json:"sockopt,omitempty"`
+	Network         string           `json:"network,omitempty"`
+	Security        string           `json:"security,omitempty"`
+	TLSSettings     *TLSSettings     `json:"tlsSettings,omitempty"`
+	RealitySettings *RealitySettings `json:"realitySettings,omitempty"`
+	WSSettings      *WSSettings      `json:"wsSettings,omitempty"`
+	GRPCSettings    *GRPCSettings    `json:"grpcSettings,omitempty"`
+	HTTPSettings    *HTTPSettings    `json:"httpSettings,omitempty"`
+	TCPSettings     *TCPSettings     `json:"tcpSettings,omitempty"`
+}
+
+type TLSSettings struct {
+	ServerName    string   `json:"serverName,omitempty"`
+	AllowInsecure bool     `json:"allowInsecure,omitempty"`
+	ALPN          []string `json:"alpn,omitempty"`
+	Fingerprint   string   `json:"fingerprint,omitempty"`
+}
+
+type RealitySettings struct {
+	ServerName  string `json:"serverName,omitempty"`
+	Fingerprint string `json:"fingerprint,omitempty"`
+	PublicKey   string `json:"publicKey,omitempty"`
+	ShortID     string `json:"shortId,omitempty"`
+	SpiderX     string `json:"spiderX,omitempty"`
+}
+
+type WSSettings struct {
+	Path    string            `json:"path,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
+}
+
+type GRPCSettings struct {
+	ServiceName string `json:"serviceName,omitempty"`
+}
+
+type HTTPSettings struct {
+	Path string   `json:"path,omitempty"`
+	Host []string `json:"host,omitempty"`
+}
+
+type TCPSettings struct {
+	Header *TCPHeader `json:"header,omitempty"`
+}
+
+type TCPHeader struct {
+	Type string `json:"type,omitempty"`
+}
+
+// BuildConfig turns a server and inbound options into an xray Config.
+func BuildConfig(s *link.Server, opts Options) (*Config, error) {
+	if s.RawConfig != nil {
+		return buildRawConfig(s, opts)
+	}
+	out, err := buildOutbound(s)
+	if err != nil {
+		return nil, err
+	}
+
+	inbounds, err := buildInbounds(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	loglevel := opts.LogLevel
+	if loglevel == "" {
+		loglevel = "warning"
+	}
+
+	cfg := &Config{
+		Log:      &LogConfig{Loglevel: loglevel},
+		Inbounds: inbounds,
+		Outbounds: []Outbound{
+			*out,
+			{Tag: "direct", Protocol: "freedom"},
+			{Tag: "block", Protocol: "blackhole"},
+		},
+	}
+	if opts.DNSProxy {
+		cfg.DNS = &DNSConfig{Servers: []string{"1.1.1.1", "8.8.8.8"}}
+	}
+	if opts.SocketMark != 0 {
+		for i := range cfg.Outbounds {
+			if cfg.Outbounds[i].StreamSettings == nil {
+				cfg.Outbounds[i].StreamSettings = &StreamSettings{}
+			}
+			cfg.Outbounds[i].StreamSettings.Sockopt = map[string]any{"mark": opts.SocketMark}
+		}
+	}
+	return cfg, nil
+}
+
+func buildInbounds(opts Options) ([]Inbound, error) {
+	listen := opts.Listen
+	if listen == "" {
+		listen = "127.0.0.1"
+	}
+	sniff := &Sniffing{Enabled: true, DestOverride: []string{"http", "tls", "quic"}}
+
+	var inbounds []Inbound
+	if opts.TUNDirect {
+		inbounds = append(inbounds, Inbound{
+			Tag:      "tun-in",
+			Protocol: "tun",
+			Settings: map[string]any{
+				"mtu":  1500,
+				"name": "thapp",
+			},
+			Sniffing: sniff,
+		})
+	}
+
+	if opts.SocksPort > 0 {
+		inbounds = append(inbounds, Inbound{
+			Tag:      "socks-in",
+			Listen:   listen,
+			Port:     opts.SocksPort,
+			Protocol: "socks",
+			Settings: map[string]any{"auth": "noauth", "udp": true},
+			Sniffing: sniff,
+		})
+	}
+	if opts.HTTPPort > 0 {
+		inbounds = append(inbounds, Inbound{
+			Tag:      "http-in",
+			Listen:   listen,
+			Port:     opts.HTTPPort,
+			Protocol: "http",
+			Settings: map[string]any{},
+			Sniffing: sniff,
+		})
+	}
+	if len(inbounds) == 0 {
+		return nil, fmt.Errorf("xray: no inbound configured (set SocksPort or HTTPPort)")
+	}
+	return inbounds, nil
+}

@@ -1,0 +1,93 @@
+package cli
+
+import (
+	"fmt"
+	"os"
+	"text/tabwriter"
+
+	"github.com/spf13/cobra"
+
+	"github.com/Abeh995/happ-cli/internal/xray"
+)
+
+func newListCmd(deps *Deps) *cobra.Command {
+	var subName string
+	cmd := &cobra.Command{
+		Use:     "list",
+		Aliases: []string{"ls", "servers"},
+		Short:   "List servers in a subscription",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sub, err := resolveSub(deps.Store, subName)
+			if err != nil {
+				return err
+			}
+			servers := sub.Servers()
+			if len(servers) == 0 {
+				fmt.Printf("Subscription %q has no servers.\n", sub.Name)
+				return nil
+			}
+			tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+			fmt.Fprintf(tw, "#\tSELECTED\tPROTOCOL\tADDRESS\tTAG\n")
+			for i, s := range servers {
+				note := s.Protocol
+				if !xray.Supported(s.Protocol) {
+					note += " (unsupported)"
+				}
+				selected := ""
+				if s.Key() == sub.Selected {
+					selected = "*"
+				}
+				address := fmt.Sprintf("%s:%d", s.Address, s.Port)
+				if s.RawConfig != nil {
+					address = "profile"
+				}
+				fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\n", i+1, selected, note, address, s.Tag)
+			}
+			return tw.Flush()
+		},
+	}
+	cmd.Flags().StringVar(&subName, "sub", "", "subscription name (default: active)")
+	_ = cmd.RegisterFlagCompletionFunc("sub", completeSubFlag(deps))
+	return cmd
+}
+
+func newConfigCmd(deps *Deps) *cobra.Command {
+	var subName string
+	var socksPort, httpPort int
+	cmd := &cobra.Command{
+		Use:               "config [selector]",
+		Short:             "Print the generated xray-core config for a server",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: completeServerSelector(deps),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sub, err := resolveSub(deps.Store, subName)
+			if err != nil {
+				return err
+			}
+			selector := ""
+			if len(args) > 0 {
+				selector = args[0]
+			}
+			srv, _, err := selectedServer(sub, selector)
+			if err != nil {
+				return err
+			}
+			cfg, err := xray.BuildConfig(srv, xray.Options{SocksPort: socksPort, HTTPPort: httpPort})
+			if err != nil {
+				return err
+			}
+			raw, err := cfg.JSON()
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(raw))
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&subName, "sub", "", "subscription name (default: active)")
+	cmd.Flags().IntVar(&socksPort, "socks", 10808, "SOCKS5 inbound port")
+	cmd.Flags().IntVar(&httpPort, "http", 10809, "HTTP inbound proxy port")
+	_ = cmd.RegisterFlagCompletionFunc("sub", completeSubFlag(deps))
+	return cmd
+}
