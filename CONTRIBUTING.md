@@ -90,3 +90,4 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ## License
 
 By contributing to Happ CLI, you agree that your contributions will be licensed under the project's [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
+

@@ -1,4 +1,4 @@
-# Happ CLI ⚡
+# کلاینت ترمینال ویندوز و لینوکس هپ (Happ CLI & Happ Windows CLI) ⚡
 
 <div align="center">
 
@@ -8,10 +8,10 @@
 [![Go Version](https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=for-the-badge&logo=go)](https://golang.org)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python)](https://python.org)
 
-**کلاینت مستقل، سبک و حرفه‌ای هپ (Happ VPN) برای خط فرمان و محیط‌های بدون رابط گرافیکی (Headless).**  
-مجهز به داشبورد تعاملی ترمینال (TUI)، کارت شبکه مجازی لایه ۳ (Wintun TUN)، سیستم ضد مسمومیت DNS و اجرای دائمی در پس‌زمینه (Background Daemon).
+**Happ CLI (happ-windows-cli)** کلاینت قدرتمند، سبک و کامندلاین (Headless) اکوسیستم **Happ** و **Xray-core** برای سیستم‌عامل‌های **ویندوز (Windows)**، **لینوکس (Linux)** و **مک (macOS)** است.  
+مجهز به داشبورد تعاملی کنسول (TUI)، کارت شبکه مجازی لایه ۳ Wintun TUN (`happ-cli-tun`) در ویندوز، تغییر آنی پروکسی سیستم (WinINet)، سیستم ضد نشت و ضد مسمومیت DNS و اجرای دائمی در پس‌زمینه (Background Daemon).
 
-[English Documentation](README.md) • [Русская документация](README.ru.md) • [گزارش باگ](https://github.com/Abeh995/happ-cli/issues)
+[English Documentation](README.md) • [Русская документация](README.ru.md) • [گزارش باگ](https://github.com/Abeh995/happ-cli/issues) • [دانلود آخرین نسخه](https://github.com/Abeh995/happ-cli/releases)
 
 </div>
 
@@ -26,6 +26,7 @@
 - [جدول دستورات تک‌خطی (CLI)](#-جدول-دستورات-تک‌خطی-cli)
 - [معماری سیستم](#-معماری-سیستم)
 - [نصب در لینوکس و مک](#-نصب-در-لینوکس-و-مک)
+- [سوالات متداول (FAQ)](#-سوالات-متداول-faq)
 - [مشارکت و لایسنس](#-مشارکت-و-لایسنس)
 
 ---
@@ -195,6 +196,26 @@ happ --help
 
 ---
 
+## ❓ سوالات متداول (FAQ)
+
+### هپ CLI ویندوز (Happ Windows CLI) چیست و چه تفاوتی با نسخه Happ Desktop دارد؟
+**Happ Windows CLI** نسخه خط فرمانی و بدون نیاز به محیط گرافیکی (Headless) کلاینت محبوب هپ است. در حالی که Happ Desktop از رابط گرافیکی سنگین استفاده می‌کند، Happ CLI با مصرف رم و پردازنده فوق‌العاده ناچیز، به توسعه‌دهندگان، ادمین‌های سرور و کاربران ویندوز اجازه می‌دهد ارتباط VPN مبتنی بر Xray را در محیط‌های PowerShell، ترمینال ویندوز و خط فرمان مدیریت کنند.
+
+### چگونه می‌توان Happ CLI را در ویندوز نصب کرد؟
+کافیست در پنجره **PowerShell** (به صورت Run as Administrator) دستور زیر را اجرا کنید:
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/Abeh995/happ-cli/main/windows/install.ps1 | iex"
+```
+این دستور فایل‌های اجرایی را در `PATH` سیستم قرار داده و درایور کارت شبکه مجازی Wintun را برای لایه ۳ آماده می‌کند.
+
+### حالت کارت شبکه مجازی (TUN Mode) در ویندوز چگونه کار می‌کند؟
+با فعال‌سازی حالت TUN (`happ mode tun`)، یک کارت شبکه مجازی پرسرعت به نام `happ-cli-tun` مبتنی بر درایور Wintun روی ویندوز ایجاد می‌شود. تمام ترافیک TCP و UDP سیستم (مرورگرها، تلگرام، دیسکورد، ترمینال، گیت و بازی‌ها) به همراه بسته‌های DNS پورت ۵۳ به صورت خودکار از تونل رمزنگاری‌شده رد می‌شوند و هیچ نشتی یا مسمومیت DNS رخ نمی‌دهد.
+
+### چه پروتکل‌هایی توسط هپ پشتیبانی می‌شوند؟
+کلاینت هپ به صورت پیش‌فرض از پروتکل‌های **VLESS** (با Reality، WebSocket، gRPC)، **VMess**، **Trojan** و **Shadowsocks** پشتیبانی کامل دارد.
+
+---
+
 ## 🤝 مشارکت و لایسنس
 
 مشارکت‌ها، پیشنهادات و گزارش باگ‌ها به شدت استقبال می‌شوند! لطفاً قبل از ارسال کدها، [راهنمای مشارکت (CONTRIBUTING.md)](CONTRIBUTING.md) را مطالعه فرمایید.
@@ -206,3 +227,4 @@ happ --help
 <div align="center">
 توسعه داده شده با ❤️ توسط <a href="https://github.com/Abeh995">Abeh995</a>
 </div>
+

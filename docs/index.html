@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happ CLI — High-Performance Headless VPN Client & Terminal TUI for Windows, Linux & macOS</title>
+  <meta name="description" content="Happ CLI (happ-windows-cli) is a high-performance headless VPN client and interactive console dashboard for Happ & Xray on Windows, Linux, and macOS. Supports Wintun Layer-3 TUN mode, System Proxy, and zero DNS leaks.">
+  <meta name="keywords" content="happ cli, happ windows cli, happ windows, happ vpn cli, happ proxy windows, xray-core, vless reality, wintun, tun mode, headless vpn, terminal app, tui, powershell vpn">
+  <meta name="author" content="Abeh995">
+  <link rel="canonical" href="https://abeh995.github.io/happ-cli/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abeh995.github.io/happ-cli/">
+  <meta property="og:title" content="Happ CLI — Headless VPN Client & Terminal Dashboard for Windows">
+  <meta property="og:description" content="Run Happ & Xray from Windows Terminal, PowerShell, or Linux. Features Wintun Layer-3 TUN mode, interactive TUI, and zero DNS leaks.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/Abeh995/happ-cli/main/assets/banner.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://abeh995.github.io/happ-cli/">
+  <meta property="twitter:title" content="Happ CLI — Headless VPN Client & Terminal Dashboard for Windows">
+  <meta property="twitter:description" content="Run Happ & Xray from Windows Terminal, PowerShell, or Linux. Features Wintun Layer-3 TUN mode, interactive TUI, and zero DNS leaks.">
+  <meta property="twitter:image" content="https://raw.githubusercontent.com/Abeh995/happ-cli/main/assets/banner.png">
+
+  <!-- Schema.org SoftwareApplication Markup -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Happ CLI",
+    "operatingSystem": "Windows 10, Windows 11, Linux, macOS",
+    "applicationCategory": "NetworkingApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "A high-performance headless VPN client and interactive terminal application for the Happ and Xray ecosystem.",
+    "url": "https://github.com/Abeh995/happ-cli",
+    "author": {
+      "@type": "Person",
+      "name": "Abeh995",
+      "url": "https://github.com/Abeh995"
+    }
+  }
+  </script>
+
+  <!-- Schema.org FAQPage Markup for Rich Google Snippets -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Happ Windows CLI?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Happ Windows CLI is a command-line interface and interactive terminal TUI application for running the Happ VPN and Xray proxy ecosystem on Windows without graphical overhead."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I install Happ CLI on Windows?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Open PowerShell as Administrator and run: powershell -c \"irm https://raw.githubusercontent.com/Abeh995/happ-cli/main/windows/install.ps1 | iex\""
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Happ CLI support full TUN mode on Windows?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, Happ CLI creates a virtual Layer-3 network adapter (happ-cli-tun) using the high-performance Wintun driver, tunneling 100% of Windows network traffic and eliminating DNS leaks."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --heading: #f0f6fc;
+      --accent: #58a6ff;
+      --accent-hover: #1f6feb;
+      --green: #238636;
+      --code-bg: #090d13;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0 1rem 4rem 1rem;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      padding: 4rem 1rem 2rem 1rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: var(--heading);
+      margin-bottom: 1rem;
+      font-weight: 800;
+    }
+    .subtitle {
+      font-size: 1.25rem;
+      color: #8b949e;
+      max-width: 700px;
+      margin: 0 auto 2rem auto;
+    }
+    .badge-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .cta-bar {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+    .btn-primary { background-color: var(--green); color: #fff; }
+    .btn-primary:hover { background-color: #2ea043; }
+    .btn-secondary { background-color: var(--card-bg); color: var(--heading); border: 1px solid var(--border); }
+    .btn-secondary:hover { background-color: #21262d; border-color: #8b949e; }
+    
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: var(--heading);
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    h3 {
+      font-size: 1.15rem;
+      color: var(--accent);
+      margin: 1.25rem 0 0.5rem 0;
+    }
+    pre {
+      background-color: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      color: #e6edf3;
+      margin: 0.75rem 0;
+    }
+    ul { margin-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.5rem; }
+    footer {
+      text-align: center;
+      color: #8b949e;
+      font-size: 0.9rem;
+      margin-top: 4rem;
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Happ CLI (Windows, Linux, macOS) ⚡</h1>
+      <p class="subtitle">A high-performance, headless VPN client and interactive terminal application for the Happ & Xray proxy ecosystem.</p>
+      <div class="badge-bar">
+        <span class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">Windows 10 / 11</span>
+        <span class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">Linux</span>
+        <span class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">macOS</span>
+        <span class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">Wintun Layer 3 TUN</span>
+        <span class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">VLESS / VMess / Trojan</span>
+      </div>
+      <div class="cta-bar">
+        <a class="btn btn-primary" href="https://github.com/Abeh995/happ-cli">View on GitHub</a>
+        <a class="btn btn-secondary" href="https://github.com/Abeh995/happ-cli/releases">Download Releases</a>
+        <a class="btn btn-secondary" href="https://github.com/Abeh995/happ-cli/blob/main/README.fa.md">راهنمای فارسی</a>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2>⚡ 5-Second Windows Installation</h2>
+      <p>Open <strong>PowerShell</strong> (Run as Administrator) and run:</p>
+      <pre><code>powershell -c "irm https://raw.githubusercontent.com/Abeh995/happ-cli/main/windows/install.ps1 | iex"</code></pre>
+      <p>This installs the global <code>happ</code> command into your system PATH and configures the Wintun adapter driver.</p>
+    </div>
+
+    <div class="card">
+      <h2>✨ Key Capabilities</h2>
+      <ul>
+        <li><strong>Interactive Terminal TUI Dashboard:</strong> Simply type <code>happ</code> to launch a keyboard-driven console interface.</li>
+        <li><strong>Layer-3 Wintun TUN Adapter:</strong> Tunnels 100% of all Windows network traffic (browsers, Telegram, Discord, CLI, games).</li>
+        <li><strong>Zero DNS Leaks & Sniffing:</strong> UDP 53 DNS hijacking and encrypted remote DoH (Cloudflare 1.1.1.1, Google 8.8.8.8) to eliminate ISP DNS manipulation.</li>
+        <li><strong>Persistent Background Daemon:</strong> Spawns a detached supervisor. Closing the terminal keeps the VPN running.</li>
+        <li><strong>Protocols Supported:</strong> Full support for VLESS (Reality, WebSocket, gRPC), VMess, Trojan, and Shadowsocks.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>❓ Frequently Asked Questions (FAQ)</h2>
+      
+      <h3>What is Happ Windows CLI?</h3>
+      <p>Happ Windows CLI is the command-line and headless terminal edition of Happ VPN. It enables developers, sysadmins, and power users to control Xray proxies without heavy GUI overhead.</p>
+
+      <h3>How does TUN Mode work on Windows?</h3>
+      <p>Happ CLI initializes a virtual adapter (<code>happ-cli-tun</code>) through the high-performance Wintun kernel driver, intercepting Layer-3 IP packets and resolving all domain names through encrypted DoH resolvers.</p>
+
+      <h3>Can I run Happ CLI in scripts or CI/CD?</h3>
+      <p>Yes, all features are exposed as one-line CLI commands such as <code>happ connect</code>, <code>happ disconnect</code>, <code>happ status</code>, and <code>happ ping all</code>.</p>
+    </div>
+
+    <footer>
+      <p>Happ CLI is open-source software licensed under <a href="https://github.com/Abeh995/happ-cli/blob/main/LICENSE">GNU GPL v3.0</a>.</p>
+      <p>Developed with precision by <a href="https://github.com/Abeh995">Abeh995</a>.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # Happ CLI - Automated Windows Installer
 # Author: Abeh995
 # Repository: https://github.com/Abeh995/happ-cli
@@ -106,3 +106,4 @@ Write-Color "  happ status             # Check live connection status and public
 Write-Host ""
 Write-Color "For full documentation: https://github.com/Abeh995/happ-cli" "DarkGray"
 Write-Host ""
+

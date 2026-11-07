@@ -1,4 +1,4 @@
-# Happ CLI ⚡
+# Happ CLI (Windows, Linux, macOS) — Headless Terminal VPN Client & TUI ⚡
 
 <div align="center">
 
@@ -9,8 +9,8 @@
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python)](https://python.org)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Abeh995/happ-cli/build-release.yml?branch=main&style=for-the-badge)](https://github.com/Abeh995/happ-cli/actions)
 
-**A high-performance, headless VPN client and interactive terminal application for the Happ / Xray ecosystem.**  
-Equipped with an interactive console TUI dashboard, Layer-3 Wintun TUN adapter, zero-leak DoH DNS subsystem, and persistent background daemon execution.
+**Happ CLI (happ-windows-cli)** is a high-performance, headless VPN client and interactive terminal application (TUI) for the **Happ** and **Xray-core** proxy ecosystem on **Windows**, **Linux**, and **macOS**.  
+Equipped with an interactive console TUI dashboard, native Windows Layer-3 Wintun TUN virtual adapter (`happ-cli-tun`), WinINet System Proxy switching, zero-leak DoH DNS subsystem, and persistent background daemon execution.
 
 [فارسی (Persian Guide)](README.fa.md) • [Русская документация](README.ru.md) • [Report Bug](https://github.com/Abeh995/happ-cli/issues) • [Releases](https://github.com/Abeh995/happ-cli/releases)
 
@@ -28,6 +28,7 @@ Equipped with an interactive console TUI dashboard, Layer-3 Wintun TUN adapter, 
 - [Architecture & Network Internals](#-architecture--network-internals)
 - [Linux & macOS Installation](#-linux--macos-installation)
 - [Building from Source](#-building-from-source)
+- [Frequently Asked Questions (FAQ)](#-frequently-asked-questions-faq)
 - [Contributing & License](#-contributing--license)
 
 ---
@@ -228,6 +229,30 @@ The Windows headless suite is located in `windows/` and runs on Python 3.8+:
 ```powershell
 python -m py_compile windows/happ_core.py
 ```
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+### What is Happ Windows CLI?
+**Happ Windows CLI** is the lightweight command-line and headless terminal edition of the Happ proxy client. While Happ Desktop provides a standard GUI, Happ CLI allows power users, developers, and sysadmins to run, automate, and monitor Xray-based VPN connections directly from PowerShell, Windows Terminal, CMD, or scripts without any graphical overhead.
+
+### How do I install Happ CLI on Windows?
+Run this single line in **PowerShell (Run as Administrator)**:
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/Abeh995/happ-cli/main/windows/install.ps1 | iex"
+```
+This globally registers the `happ` command in your system `PATH` and synchronizes the Wintun Layer-3 driver automatically.
+
+### Why choose Happ CLI over Happ Desktop GUI?
+- **Zero GUI Overhead:** Minimal RAM and CPU consumption, ideal for developer workstations and remote servers.
+- **Interactive Console Dashboard (TUI):** Sleek, keyboard-driven menu (`happ`) with real-time status and live TCP ping tests.
+- **Persistent Daemon:** The VPN connection survives closing your terminal or logging out.
+- **Instant TUN / Proxy Toggle:** Switch between 100% full-system routing (`happ mode tun`) and browser-only proxy (`happ mode proxy`) in 1 second.
+- **Zero DNS Leaks:** Integrated DoH remote resolvers and UDP port 53 hijacking eliminate ISP DNS spoofing and manipulation.
+
+### Which proxy protocols does Happ CLI support?
+Happ CLI parses and connects to **VLESS** (Reality, WebSocket, gRPC), **VMess**, **Trojan**, and **Shadowsocks** links and subscription feeds.
 
 ---
 

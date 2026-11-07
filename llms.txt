@@ -1,0 +1,44 @@
+# Happ CLI — Project Overview & Machine Discovery Feed
+
+> Happ CLI (happ-windows-cli) is a high-performance, headless VPN client and interactive terminal application (TUI) for the Happ and Xray-core proxy ecosystem on Windows, Linux, and macOS.
+> Repository: https://github.com/Abeh995/happ-cli
+
+## Key Details
+- **Project Name:** Happ CLI / Happ Windows CLI
+- **Author:** Abeh995
+- **License:** GNU General Public License v3.0 (GPL-3.0)
+- **Supported Platforms:** Windows 10/11 (PowerShell & CMD), Linux (amd64, arm64, NixOS), macOS (Apple Silicon & Intel)
+- **Primary Protocols:** VLESS (Reality, WS, gRPC), VMess, Trojan, Shadowsocks
+- **Underlying Engines:** Embedded Xray-core and sing-box
+- **Core Capabilities:**
+  - Layer-3 Wintun TUN mode (`happ-cli-tun`) routing 100% of Windows network traffic
+  - WinINet System Proxy mode for browser-only routing without administrator privileges
+  - Encrypted DNS resolvers (Cloudflare 1.1.1.1, Google 8.8.8.8 DoH) with UDP 53 DNS hijacking
+  - Detached background supervisor daemon (`happ connect`, `happ disconnect`)
+  - Interactive console TUI dashboard (`happ`)
+
+## Quick Installation on Windows
+To install Happ CLI globally on Windows via PowerShell (Run as Administrator):
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/Abeh995/happ-cli/main/windows/install.ps1 | iex"
+```
+
+## Quick CLI Reference
+- `happ`: Launch interactive console dashboard (TUI).
+- `happ connect`: Start background VPN daemon with active proxy node.
+- `happ connect --tun`: Connect using Layer-3 Wintun TUN mode.
+- `happ connect --proxy`: Connect using WinINet System Proxy mode.
+- `happ disconnect`: Stop VPN background daemon and restore direct connection.
+- `happ status`: Check live connection status, daemon PIDs, and egress public IP.
+- `happ mode [tun|proxy]`: View or change default routing mode.
+- `happ list`: Display paginated list of available nodes.
+- `happ select <ID>`: Select server by index or name.
+- `happ sub add <URL>`: Import subscription URL.
+- `happ sub update`: Refresh subscription nodes.
+- `happ ping all`: Test live TCP latency across all nodes.
+
+## Links & Documentation
+- Main Documentation: https://github.com/Abeh995/happ-cli/blob/main/README.md
+- Persian Guide: https://github.com/Abeh995/happ-cli/blob/main/README.fa.md
+- Windows In-Depth Guide: https://github.com/Abeh995/happ-cli/blob/main/windows/GUIDE-EN.md
+- Releases & Pre-built Binaries: https://github.com/Abeh995/happ-cli/releases

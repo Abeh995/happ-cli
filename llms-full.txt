@@ -1,0 +1,64 @@
+# Happ CLI (happ-windows-cli) — Complete System Architecture & Operational Manual
+
+## Summary
+Happ CLI is an open-source, lightweight command-line interface and terminal TUI application for the Happ VPN / Xray proxy network. It supports Windows (PowerShell, CMD, Terminal), Linux, and macOS.
+
+Repository: https://github.com/Abeh995/happ-cli
+Author: Abeh995
+License: GNU General Public License v3.0 (GPL-3.0)
+
+## System Architecture
+
+```
++-----------------------------------------------------------------------+
+|                    Terminal (PowerShell / CMD / Bash)                 |
+|            Commands: happ, happ connect, happ mode, happ list         |
++-----------------------------------+-----------------------------------+
+                                    |
+          +-------------------------+-------------------------+
+          |                                                   |
+[Mode 1: TUN Mode (Default)]                [Mode 2: System Proxy Mode]
+Layer-3 Virtual Network Adapter             Windows Internet Settings (WinINet)
+Wintun Driver (`happ-cli-tun`)              Configures HTTP/HTTPS/SOCKS registry
+Hijacks 100% of System Traffic & DNS        Routes browsers & proxy-aware apps
+Requires Administrator terminal             Standard User (No Admin required)
+          |                                                   |
+          +-------------------------+-------------------------+
+                                    |
++-----------------------------------+-----------------------------------+
+|               Local Core Engine (127.0.0.1:10808 / 10809)            |
+|  - Embedded Xray-core (VLESS Reality / VMess / Trojan / Shadowsocks)  |
+|  - Active Sniffing for TLS, HTTP, and QUIC (IPIfNonMatch strategy)    |
+|  - Encrypted Remote DoH Resolvers (Cloudflare 1.1.1.1 / Google 8.8.8.8)|
++-----------------------------------------------------------------------+
+```
+
+## Supported Proxy Protocols
+- **VLESS:** Supports Reality security, WebSocket transport, gRPC, and raw TCP.
+- **VMess:** Standard and encrypted WebSocket/TCP configs.
+- **Trojan:** TLS-encrypted proxying.
+- **Shadowsocks:** Modern AEAD ciphers.
+
+## Windows Automated Installation
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/Abeh995/happ-cli/main/windows/install.ps1 | iex"
+```
+
+## Command Reference
+| Command | Action |
+| :--- | :--- |
+| `happ` | Open interactive terminal dashboard (TUI) |
+| `happ connect` | Connect to preferred node as detached background daemon |
+| `happ connect --tun` | Connect with Layer-3 Wintun TUN mode |
+| `happ connect --proxy` | Connect with Windows System Proxy mode |
+| `happ connect <ID>` | Connect directly to node ID |
+| `happ disconnect` | Terminate background daemons and restore direct network |
+| `happ status` | Display connection status, daemon PIDs, and public egress IP |
+| `happ mode [tun/proxy]` | View or change default connection mode |
+| `happ list [page]` | Browse proxy nodes with paginated view |
+| `happ select <ID/query>` | Select active server by index or country name |
+| `happ sub add <URL>` | Import new subscription link |
+| `happ sub update` | Refresh all subscription nodes |
+| `happ sub list` | View saved subscriptions and quota telemetry |
+| `happ ping all` | Benchmark live TCP latency across all nodes |
+| `happ help` | Print command-line usage reference |
